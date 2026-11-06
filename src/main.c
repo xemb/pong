@@ -1,3 +1,10 @@
+/*
+ * Pong, a simple ping-pong game built with Raylib.
+ *
+ * Xemb (emsendrecv@gmail.com)
+ * MIT License 2026
+ */
+
 #include <raylib.h>
 
 #define WINDOW_WIDTH 800
