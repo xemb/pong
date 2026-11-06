@@ -32,7 +32,6 @@ int main(void) {
    * ball and tray
    */
   Vector2 velocity = {GetRandomValue(0, 1) ? 1.0 : -1.0, 1.0};
-  int speed = 300;
 
   // Tray
   Rectangle tray;
@@ -40,8 +39,14 @@ int main(void) {
   tray.width = 2 * circle.r;
   ResetTrayPosition(&tray);
 
+  // Timer
+  double timer = GetTime(), dead = 0.0;
+  bool over = false;
+  float factor = 1.0;
+
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
+    int speed = 300 * factor;
 
     // --- Update ---
     circle.x += speed * velocity.x * dt;
@@ -74,12 +79,43 @@ int main(void) {
     if (IsKeyDown(KEY_D) && tray.x + tray.width <= WINDOW_WIDTH) {
       tray.x += speed * dt;
     }
+    if (IsKeyPressed(KEY_W)) {
+      factor += 0.5;
+    }
+    if (IsKeyPressed(KEY_S) && factor > 1.0) {
+      factor -= 0.5;
+    }
+
+    // Over
+    if (!over && circle.y - circle.r >= WINDOW_HEIGHT) {
+      over = true;
+      dead = GetTime();
+    }
+
+    if (over) {
+      if (IsKeyPressed(KEY_SPACE)) {
+        timer = GetTime();
+        factor = 1.0;
+        over = false;
+        ResetCirclePosition(&circle);
+        ResetTrayPosition(&tray);
+      }
+    }
 
     // --- Draw ---
     BeginDrawing();
 
-    DrawCircle(circle.x, circle.y, circle.r, PINK);
-    DrawRectangleRec(tray, GREEN);
+    if (!over) {
+      DrawCircle(circle.x, circle.y, circle.r, PINK);
+      DrawRectangleRec(tray, GREEN);
+
+      DrawText(TextFormat("%.1fs SPEED:%.1fx", GetTime() - timer, factor), 50,
+               50, 20, BLACK);
+    } else {
+      DrawText(TextFormat("YOU SURVIVED FOR %.1lfs\nPRESS SPACE TO RETRY",
+                          dead - timer),
+               100, 100, 30, BLACK);
+    }
 
     ClearBackground(GRAY);
     EndDrawing();
