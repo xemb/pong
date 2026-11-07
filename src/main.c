@@ -24,8 +24,8 @@ typedef struct Game {
   // Timer
   double timer;
   double dead;
-  double mainly_duration;
-  double toggle_speed_diff;
+  double max_duration;
+  double last_toggle_time;
 
   float factor;
   float mainly_factor;
@@ -44,11 +44,15 @@ static void ResetTrayPosition(Rectangle *tray) {
 }
 
 static void CheckMajorSpeed(Game *game) {
-  game->toggle_speed_diff = GetTime() - game->toggle_speed_diff;
-  if (game->toggle_speed_diff > game->mainly_duration) {
-    game->mainly_duration = game->toggle_speed_diff;
+  double now = GetTime();
+  double current_diff = now - game->last_toggle_time;
+
+  if (current_diff > game->max_duration) {
+    game->max_duration = current_diff;
     game->mainly_factor = game->factor;
   }
+
+  game->last_toggle_time = now;
 }
 
 static void UpdateGame(Game *game) {
@@ -109,6 +113,10 @@ static void UpdateGame(Game *game) {
       game->timer = GetTime();
       game->factor = 1.0;
       game->over = false;
+
+      game->max_duration = 0.0;
+      game->last_toggle_time = GetTime();
+
       ResetCirclePosition(&game->circle);
       ResetTrayPosition(&game->tray);
     }
@@ -130,8 +138,6 @@ static void DrawGame(Game *game) {
             game->dead - game->timer, game->mainly_factor),
         100, 100, 30, BLACK);
   }
-  DrawText(TextFormat("[DEBUG] LAST DIFF:%.1lf", game->toggle_speed_diff), 500,
-           20, 20, BLACK);
 }
 
 int main(void) {
@@ -158,8 +164,8 @@ int main(void) {
   // Timer
   game.timer = GetTime();
   game.dead = 0.0;
-  game.mainly_duration = 0.0;
-  game.toggle_speed_diff = GetTime();
+  game.max_duration = 0.0;
+  game.last_toggle_time = GetTime();
 
   game.over = false;
   game.factor = 1.0;
